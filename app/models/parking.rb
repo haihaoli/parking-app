@@ -1,4 +1,6 @@
 class Parking < ApplicationRecord
+  before_validation :setup_amount
+
   validates_presence_of :parking_type, :start_at
   validates_inclusion_of :parking_type, :in => ["guest", "short-term", "long-term"]
 
@@ -7,10 +9,6 @@ class Parking < ApplicationRecord
   belongs_to :user, :optional => true
 
   def validate_end_at_with_amount
-    if ( end_at.present? && amount.blank? )
-      errors.add( :amount, "有结束时间就必须有金额")
-    end
-
     if ( end_at.blank? && amount.present? )
       errors.add( :end_at, "有金额就必须有结束时间")
     end
@@ -21,12 +19,12 @@ class Parking < ApplicationRecord
     ( end_at - start_at )/60
   end
 
-  def calculate_amount
+  def setup_amount
 
     puts "----"
     puts self.parking_type
     puts "----"
-    byebug
+
     if self.amount.blank? && self.start_at.present? && self.end_at.present?
       if self.user.blank?
         self.amount = calculate_guest_term_amount # 一般费率
